@@ -75,14 +75,6 @@ class Emulator extends Component {
       sampleRate: this.speakers.getSampleRate()
     });
 
-    // For debugging. (["nes"] instead of .nes to avoid VS Code type errors.)
-    window["nes"] = this.nes;
-
-    this.frameTimer = new FrameTimer({
-      onGenerateFrame: Raven.wrap(this.nes.frame),
-      onWriteFrame: Raven.wrap(this.screen.writeBuffer)
-    });
-
     // Set up gamepad and keyboard
     this.gamepadController = new GamepadController({
       onButtonDown: this.nes.buttonDown,
@@ -110,6 +102,17 @@ class Emulator extends Component {
       "keypress",
       this.keyboardController.handleKeyPress
     );
+
+    // For debugging. (["nes"] instead of .nes to avoid VS Code type errors.)
+    window["nes"] = this.nes;
+
+    this.frameTimer = new FrameTimer({
+      onGenerateFrame: () => {
+        this.keyboardController.turbo()
+        Raven.wrap(this.nes.frame)()
+      },
+      onWriteFrame: Raven.wrap(this.screen.writeBuffer)
+    });
 
     this.nes.loadROM(this.props.romData);
     this.start();
